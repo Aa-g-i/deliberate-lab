@@ -146,6 +146,31 @@ export class ChatEditor extends MobxLitElement {
               </div>
             `
           : nothing}
+        ${timeLimit !== null
+          ? html`
+              <div class="number-input tab tab-bottom">
+                <label for="timeMinimum">
+                  Minimum required wait time (in minutes)
+                </label>
+                <input
+                  type="number"
+                  id="timeMinimum"
+                  name="timeMinimum"
+                  min="0"
+                  .value=${this.stage?.timeMinimumInMinutes ?? 0}
+                  ?disabled=${!this.experimentEditor.canEditStages}
+                  @input=${(e: InputEvent) => {
+                    const val = Number((e.target as HTMLInputElement).value);
+                    if (!this.stage) return;
+                    this.experimentEditor.updateStage({
+                      ...this.stage,
+                      timeMinimumInMinutes: val > 0 ? val : null,
+                    });
+                  }}
+                />
+              </div>
+            `
+          : nothing}
       </div>
     `;
   }

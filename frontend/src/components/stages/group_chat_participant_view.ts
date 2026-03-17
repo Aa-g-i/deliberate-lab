@@ -26,6 +26,7 @@ import {
   ChatStageConfig,
   DiscussionItem,
   StageKind,
+  getTimeElapsed,
 } from '@deliberation-lab/utils';
 
 import {styles} from './group_chat_participant_view.scss';
@@ -164,7 +165,7 @@ export class GroupChatView extends MobxLitElement {
     }
 
     const onClick = async () => {
-      if (!this.stage) return;
+      if (!this.stage || this.isMinimumTimeNotMet) return;
 
       this.readyToEndDiscussionLoading = true;
       try {
@@ -183,13 +184,16 @@ export class GroupChatView extends MobxLitElement {
       this.participantService.isReadyToEndChatDiscussion(
         this.stage.id,
         currentDiscussionId,
-      );
+      ) ||
+      this.isMinimumTimeNotMet;
 
     return html`
       <pr-tooltip
-        text=${isDisabled
-          ? 'You can move on once others are also ready to move on.'
-          : ''}
+        text=${this.isMinimumTimeNotMet
+          ? `You must wait until ${this.stage.timeMinimumInMinutes} minutes have passed.`
+          : isDisabled
+            ? 'You can move on once others are also ready to move on.'
+            : ''}
         position="TOP_END"
       >
         <pr-button
@@ -267,6 +271,8 @@ export class GroupChatView extends MobxLitElement {
       }
     }
 
+    disableNext = disableNext || this.isMinimumTimeNotMet;
+
     const renderProgress = () => {
       if (!this.stage?.progress.showParticipantProgress) {
         return nothing;
@@ -305,6 +311,23 @@ export class GroupChatView extends MobxLitElement {
         ${this.renderEndDiscussionButton(currentDiscussionId)}
       </stage-footer>
     `;
+  }
+
+  get isMinimumTimeNotMet() {
+    if (!this.stage || !this.stage.timeMinimumInMinutes) return false;
+
+    const publicStageData = this.cohortService.stagePublicDataMap[
+      this.stage.id
+    ] as ChatStagePublicData;
+
+    if (!publicStageData?.discussionStartTimestamp) {
+      return true;
+    }
+
+    return (
+      getTimeElapsed(publicStageData.discussionStartTimestamp, 'm') <
+      this.stage.timeMinimumInMinutes
+    );
   }
 }
 

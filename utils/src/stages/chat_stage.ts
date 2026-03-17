@@ -29,6 +29,7 @@ export interface ChatStageConfig extends BaseStageConfig {
   kind: StageKind.CHAT;
   discussions: ChatDiscussion[]; // ordered list of discussions
   timeLimitInMinutes: number | null; // How long remaining in the chat.
+  timeMinimumInMinutes: number | null; // Minimum amount of time participants must spend in chat.
   requireFullTime: boolean; // Require participants to stay in chat until time limit is up
 }
 
@@ -118,6 +119,7 @@ export function createChatStage(
       createStageProgressConfig({waitForAllParticipants: true}),
     discussions: config.discussions ?? [],
     timeLimitInMinutes: config.timeLimitInMinutes ?? null,
+    timeMinimumInMinutes: config.timeMinimumInMinutes ?? null,
     requireFullTime: config.requireFullTime ?? false,
   };
 }
