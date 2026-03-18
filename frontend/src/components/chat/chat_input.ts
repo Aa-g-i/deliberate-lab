@@ -27,7 +27,7 @@ export class ChatInputComponent extends MobxLitElement {
   @property() sendUserInput: (input: string) => void = async (
     input: string,
   ) => {
-    if (!this.stageId || !input || input.trim() === '') return;
+    if (!this.stageId || !input || input.trim().length === 0) return;
     await this.participantService.createChatMessage({message: input.trim()});
     this.participantAnswerService.updateChatInput(this.stageId, '');
   };
@@ -100,7 +100,7 @@ export class ChatInputComponent extends MobxLitElement {
           <pr-icon-button
             icon="send"
             variant="tonal"
-            ?disabled=${this.isDisabled}
+            ?disabled=${this.isDisabled || this.getUserInput().trim().length === 0}
             ?loading=${this.isLoading}
             @click=${sendInput}
           >

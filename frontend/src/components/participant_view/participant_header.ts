@@ -173,7 +173,6 @@ export class Header extends MobxLitElement {
     const minutes = Math.floor(this.timeRemaining / 60);
     const seconds = Math.floor(this.timeRemaining % 60);
     const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-
     return html`
       <div class="timer">
         <pr-icon

@@ -8,7 +8,7 @@ import {
   createRevealStage,
   createSurveyPerParticipantStage,
   createSurveyStage,
-  createTosStage,
+  createTOSStage,
   createTransferStage,
 } from '@deliberation-lab/utils';
 
@@ -459,7 +459,7 @@ export function getAdversarialTemplate(): ExperimentTemplate {
         }
       ]
     }),
-    createTosStage({
+    createTOSStage({
       id: "consent-form",
       name: "Consent Form",
       descriptions: {

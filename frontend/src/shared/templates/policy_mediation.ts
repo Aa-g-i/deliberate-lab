@@ -1895,14 +1895,61 @@ Thank you for completing the surveys. Please proceed to the debrief.`
     transferStage.timeoutSeconds = timeoutSecs;
     const minLow = config.minLowSupportParticipants ?? 1;
     const minHigh = config.minHighSupportParticipants ?? 1;
-    if (transferStage.autoTransferConfig && transferStage.autoTransferConfig.type === 'condition' && transferStage.autoTransferConfig.transferGroups.length > 0) {
-      for (const tGroup of transferStage.autoTransferConfig.transferGroups) {
-        if (tGroup.composition && tGroup.composition.length >= 2) {
-            tGroup.composition[0].minCount = minLow;
-            tGroup.composition[1].minCount = minHigh;
+    const totalMin = config.minParticipants ?? 5; // "minimum participants for automatic transfer should be 5!"
+
+    transferStage.autoTransferConfig = {
+      type: 'condition',
+      autoCohortParticipantConfig: {
+        minParticipantsPerCohort: totalMin,
+        maxParticipantsPerCohort: config.maxParticipants ?? totalMin,
+        includeAllParticipantsInCohortCount: false,
+        botProtection: true
+      },
+      enableGroupBalancing: false,
+      transferGroups: [
+        {
+          id: 'matched_discussion_group',
+          name: 'Discussion Group',
+          composition: [
+            {
+              id: 'low_support',
+              condition: {
+                id: 'low_cond',
+                type: 'comparison',
+                target: { stageId: 'policy_initial_survey', questionId: 'policy_support_initial' },
+                operator: ComparisonOperator.LESS_THAN_OR_EQUAL,
+                value: 50
+              },
+              minCount: minLow,
+              maxCount: 99
+            },
+            {
+              id: 'high_support',
+              condition: {
+                id: 'high_cond',
+                type: 'comparison',
+                target: { stageId: 'policy_initial_survey', questionId: 'policy_support_initial' },
+                operator: ComparisonOperator.GREATER_THAN,
+                value: 50
+              },
+              minCount: minHigh,
+              maxCount: 99
+            },
+            {
+              id: 'any_support',
+              condition: {
+                id: 'any_cond',
+                type: 'group',
+                operator: ConditionOperator.AND,
+                conditions: []
+              },
+              minCount: Math.max(0, totalMin - minLow - minHigh),
+              maxCount: 99
+            }
+          ]
         }
-      }
-    }
+      ]
+    };
   }
 
   const chatStage = stageConfigs.find((s: any) => s.name === 'Group Discussion') as any;
@@ -1915,9 +1962,13 @@ Thank you for completing the surveys. Please proceed to the debrief.`
 
   // Modify default minParticipants configs
   for (const stage of stageConfigs) {
-    if (stage.name === 'Group Discussion' || stage.name === 'Transfer') {
+    if (stage.name === 'Transfer') {
       if (!stage.progress) { stage.progress = { minParticipants: 0, waitForAllParticipants: true, showParticipantProgress: true }; }
-      stage.progress.minParticipants = config.minParticipants;
+      stage.progress.minParticipants = config.minParticipants ?? 5; // minimum participants for auto transfer
+      stage.progress.waitForAllParticipants = true;
+    } else if (stage.name === 'Group Discussion') {
+      if (!stage.progress) { stage.progress = { minParticipants: 0, waitForAllParticipants: true, showParticipantProgress: true }; }
+      stage.progress.minParticipants = Math.min(3, config.minParticipants ?? 5); // chat min is 3, ideally 5 but allowing fallback groups of 3+ to work
       stage.progress.waitForAllParticipants = true;
     }
   }
